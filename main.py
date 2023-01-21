@@ -3,9 +3,11 @@ import ffmpeg
 import re
 import os
 from datetime import date
+import pyinputplus as pyip
 
 # Create the regex needed to grab only letters and numbers from title
 PATTERN = re.compile(r"[0-9A-Za-z]*")
+TIME_PATTERN = re.compile(r"(\d{2}):(\d{2}):(\d{2})")
 
 FILE_PATH_TO_SAVE_ORIGINAL_VIDEO_TO = (
     r"/home/jaxon/Desktop/flipthis/samples-to-post/FILE_TO_MAKE_AND_REMOVE_VIDEOS/"
@@ -22,6 +24,28 @@ def create_sanitized_title(original_title: str) -> str:
     split_title = list(map(lambda part: part.lower(), split_title))
     # Return final title. Each word in title joined by an _ and date appended to end
     return ("_").join(split_title) + f"(DOWNLOADED_{current_date}).mp4"
+
+
+def check_time_input_validity(inputted_time: str) -> bool:
+    match = TIME_PATTERN.match(inputted_time)
+    # If the time matches the regex, further verify it based on standard time conventions
+    if match:
+        hours, minutes, seconds = match.groups()
+        if int(hours) >= 24:
+            return False
+        if int(minutes) >= 60 or int(seconds) >= 60:
+            return False
+
+        return True
+
+    # If here, there was no match for regex, so just return False
+    return False
+
+
+def convert_inputted_time_to_seconds(inputted_time: str) -> int:
+    match = TIME_PATTERN.match(inputted_time)
+    hours, minutes, seconds = match.groups()
+    return (int(hours) * 3600) + (int(minutes) * 60) + (int(seconds))
 
 
 def main():
@@ -59,6 +83,44 @@ def main():
         print("Something went wrong when downloading.")
 
     print(f'Sample video downloaded successfully!\n\nSAVED TO\n"{path_video_saved_to}"')
+
+    start_time_seconds = ""
+    end_time_seconds = ""
+
+    # Get input for the start_time_seconds of the sample they want to trim from
+    while not start_time_seconds and not end_time_seconds:
+        # Create a temp variable called inputted_start that will get validated by a regex
+        inputted_start = input(
+            "\n\nEnter the time you want to START the trim at IN THIS FORMAT (HH:MM:SS):\n"
+        )
+        # Strip whitespace
+        inputted_start = inputted_start.strip()
+
+        # Validate that the time is valid
+        isValidTime = check_time_input_validity(inputted_start)
+        if not isValidTime:  # If not valid, then continue so the loop runs again
+            continue
+
+        # Take the time they entered and make it into int seconds from a string
+        start_time_seconds = convert_inputted_time_to_seconds(inputted_start)
+
+        # Create a temp variable called inputted_end that will get validated by a regex
+        inputted_end = input(
+            "\n\nEnter the time you want to END the trim at IN THIS FORMAT (HH:MM:SS):\n"
+        )
+        # Strip whitespace
+        inputted_end = inputted_end.strip()
+
+        # Validate that the time is valid
+        isValidTime = check_time_input_validity(inputted_end)
+        if not isValidTime:  # If not valid, then continue so the loop runs again
+            continue
+
+        # Take the time they entered and make it into int seconds from a string
+        end_time_seconds = convert_inputted_time_to_seconds(inputted_end)
+
+    print(f"\n\nSTART TIME IN SECONDS: {start_time_seconds}")
+    print(f"END TIME IN SECONDS: {end_time_seconds}")
 
 
 if __name__ == "__main__":
