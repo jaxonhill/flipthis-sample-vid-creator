@@ -3,7 +3,6 @@ import ffmpeg
 import re
 import os
 from datetime import date
-import pyinputplus as pyip
 
 # Create the regex needed to grab only letters and numbers from title
 PATTERN = re.compile(r"[0-9A-Za-z]*")
