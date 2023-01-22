@@ -13,6 +13,10 @@ FILE_PATH_TO_SAVE_ORIGINAL_VIDEO_TO = (
     r"/home/jaxon/Desktop/flipthis/samples-to-post/FILE_TO_MAKE_AND_REMOVE_VIDEOS/"
 )
 
+FILE_PATH_FOR_FINISHED_VIDEO = (
+    r"/home/jaxon/Desktop/flipthis/samples-to-post/finished-videos/"
+)
+
 
 def create_sanitized_title(original_title: str) -> str:
     # Get date to append to end of file name
@@ -81,8 +85,7 @@ def main():
         )
     except Exception as e:
         print("Something went wrong when downloading.")
-
-    print(f'Sample video downloaded successfully!\n\nSAVED TO\n"{path_video_saved_to}"')
+        return
 
     start_time_seconds = ""
     end_time_seconds = ""
@@ -121,6 +124,31 @@ def main():
 
     print(f"\n\nSTART TIME IN SECONDS: {start_time_seconds}")
     print(f"END TIME IN SECONDS: {end_time_seconds}")
+
+    # Start ffmpeg process of trimming
+    final_file_name_and_path = f"{FILE_PATH_FOR_FINISHED_VIDEO + file_safe_title}"
+
+    isDownloaded = False
+
+    try:
+        # ss = start time, t = trim by how many seconds? So we take end time - start time
+        input_stream = ffmpeg.input(
+            path_video_saved_to,
+            ss=start_time_seconds,
+            t=(end_time_seconds - start_time_seconds),
+        )
+        output = ffmpeg.output(input_stream, final_file_name_and_path, format="mp4")
+        output.run()
+        isDownloaded = True
+    except Exception as e:
+        print("Something went wrong with ffmpeg.")
+
+    os.remove(path_video_saved_to)
+
+    if isDownloaded:
+        print(f'\n\nSUCCESS! Saved your file to:\n"{final_file_name_and_path}"\n')
+    else:
+        print("Please retry.")
 
 
 if __name__ == "__main__":
